@@ -54,7 +54,17 @@
 			<optional>true</optional>
 		</dependency>
 		<!-- Utilities -->
-		
+		<!-- Dependencia necesaria para @PreAuthorize y @EnableMethodSecurity -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
+		</dependency>
+
+		<!-- Dependencia necesaria para validar JWT de Azure AD -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
