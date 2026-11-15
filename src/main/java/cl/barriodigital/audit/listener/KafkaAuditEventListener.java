@@ -13,9 +13,14 @@ import cl.barriodigital.audit.repository.AuditEventRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Guarda cada mensaje de requests.events y audit.timeline tal como llegó. Un mensaje se identifica por su
+ * tópico, partición y offset: si Kafka lo entrega de nuevo, no se registra otra vez. Un fallo de base de datos
+ * se propaga y lo reintenta el manejador de errores.
+ */
+@Slf4j
 @Component
 @RequiredArgsConstructor
-@Slf4j
 public class KafkaAuditEventListener {
 
     private final AuditEventRepository auditEventRepository;
@@ -27,18 +32,25 @@ public class KafkaAuditEventListener {
     public void consumeAuditEvents(
             @Payload String payload,
             @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
+            @Header(KafkaHeaders.RECEIVED_PARTITION) int partition,
+            @Header(KafkaHeaders.OFFSET) long offset,
             @Header(value = KafkaHeaders.RECEIVED_KEY, required = false) String key) {
 
-        log.info("Evento recibido desde el tópico [{}]: {}", topic, payload);
+        if (auditEventRepository.existsByTopicNameAndPartitionNumberAndRecordOffset(topic, partition, offset)) {
+            log.info("Evento [{}-{}@{}] ya auditado: se ignora", topic, partition, offset);
+            return;
+        }
 
         AuditEvent auditEvent = AuditEvent.builder()
                 .topicName(topic)
+                .partitionNumber(partition)
+                .recordOffset(offset)
                 .eventKey(key)
                 .payload(payload)
                 .receivedAt(LocalDateTime.now())
                 .build();
 
         auditEventRepository.save(auditEvent);
-        log.info("Evento auditado con exito con ID: {}", auditEvent.getId());
+        log.info("Evento [{}-{}@{}] auditado con ID {}", topic, partition, offset, auditEvent.getId());
     }
 }

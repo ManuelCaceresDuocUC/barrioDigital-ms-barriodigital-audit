@@ -12,4 +12,8 @@ public interface AuditEventRepository extends JpaRepository<AuditEvent, Long> {
     
     // Búsqueda por tópico
     Page<AuditEvent> findByTopicName(String topicName, Pageable pageable);
+
+    // Idempotencia: Kafka puede entregar un mismo mensaje más de una vez
+    boolean existsByTopicNameAndPartitionNumberAndRecordOffset(String topicName, Integer partitionNumber,
+            Long recordOffset);
 }
