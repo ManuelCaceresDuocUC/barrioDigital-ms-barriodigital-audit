@@ -1,29 +1,32 @@
+# Configuración del microservicio de auditoría (ms-audit).
 server:
-  port: 8084
+  port: 8084                      # Puerto HTTP en el que escucha el servicio.
 
 spring:
   application:
-    name: barriodigital-ms-audit
+    name: barriodigital-ms-audit  # Nombre lógico (aparece en logs).
 
+  # Conexión a Oracle (en la nube estos valores se sobrescriben con variables de entorno en el compose).
   datasource:
-    url: jdbc:oracle:thin:@localhost:1521/FREEPDB1
+    url: jdbc:oracle:thin:@localhost:1521/FREEPDB1   # host:puerto/servicio de Oracle.
     username: barriodigital
     password: barriodigital
     driver-class-name: oracle.jdbc.OracleDriver
 
   jpa:
-    database-platform: org.hibernate.dialect.OracleDialect
+    database-platform: org.hibernate.dialect.OracleDialect  # SQL específico de Oracle.
     hibernate:
-      ddl-auto: update
-    show-sql: true
+      ddl-auto: update            # Crea/ajusta las tablas según las entidades (cómodo en desarrollo).
+    show-sql: true                # Muestra el SQL en el log (útil para estudiar qué hace JPA).
     properties:
       hibernate:
-        format_sql: true
+        format_sql: true          # SQL con saltos de línea para leerlo mejor.
 
   kafka:
+    # Dirección de los brokers; en ec2-apps se entrega por la variable KAFKA_BOOTSTRAP_SERVERS.
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     consumer:
-      group-id: ms-audit-consumer-group
-      auto-offset-reset: earliest
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      group-id: ms-audit-consumer-group   # Grupo de consumidores: el offset leído se guarda por grupo.
+      auto-offset-reset: earliest         # Si el grupo es nuevo, empieza desde el primer mensaje del tópico.
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer    # La clave llega como texto.
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer  # El valor (JSON) llega como texto.
